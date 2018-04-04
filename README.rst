@@ -7,6 +7,11 @@ models under which they claim to be secure.
 Also includes interfaces for specifying attacks and evaluating attacks against
 models.
 
+Installation
+------------
+
+You can install from PyPI: ``pip install robustml``.
+
 Packaging
 ---------
 
