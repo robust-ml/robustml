@@ -25,6 +25,36 @@ class ThreatModel(metaclass=ABCMeta):
         '''
         raise NotImplementedError
 
+class Or(ThreatModel):
+    '''
+    A union of threat models.
+    '''
+
+    def __init__(self, *threat_models):
+        self._threat_models = threat_models
+
+    def check(self, original, perturbed):
+        return any(i.check(original, perturbed) for i in self._threat_models)
+
+    @property
+    def targeted(self):
+        return all(i.targeted for i in self._threat_models)
+
+class And(ThreatModel):
+    '''
+    An intersection of threat models.
+    '''
+
+    def __init__(self, *threat_models):
+        self._threat_models = threat_models
+
+    def check(self, original, perturbed):
+        return all(i.check(original, perturbed) for i in self._threat_models)
+
+    @property
+    def targeted(self):
+        return any(i.targeted for i in self._threat_models)
+
 class Lp(ThreatModel):
     '''
     Bounded L_p perturbation. Given a `p` and `epsilon`, x' is a valid
