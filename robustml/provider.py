@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import os
 import numpy as np
+import pickle
 import PIL.Image
 
 from . import dataset as d
@@ -26,7 +27,7 @@ class Provider(metaclass=ABCMeta):
         '''
         raise NotImplementedError
 
-class MNIST:
+class MNIST(Provider):
     def __init__(self):
         # XXX relies on tensorflow, remove this dependency. we don't even
         # explicitly list tensorflow as a dependency in our setup.py.
@@ -44,7 +45,28 @@ class MNIST:
         y = mnist.test.labels[index]
         return x, y
 
-class ImageNet:
+class CIFAR10(Provider):
+    def __init__(self, test_data):
+        '''
+        test_data is a path to the 'test_batch' file from
+        'http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz'
+        '''
+        with open(test_data, 'rb') as f:
+            data = pickle.load(f, encoding='bytes')
+        self.xs = data[b'data'].reshape((10000,3,32,32)).astype(np.float32) / 255.0
+        self.xs = np.transpose(self.xs, (0,2,3,1)) # (N,3,32,32) -> (N,32,32,3)
+        self.ys = data[b'labels']
+
+    def provides(self, dataset):
+        return isinstance(dataset, d.CIFAR10)
+
+    def __len__(self):
+        return 10000
+
+    def __getitem__(self, index):
+        return self.xs[index], self.ys[index]
+
+class ImageNet(Provider):
     def __init__(self, path, shape):
         self._path = path
         self._shape = shape
