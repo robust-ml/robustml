@@ -22,12 +22,12 @@ class Dataset:
 
 class MNIST(Dataset):
     '''
-    Data points are size 784 1-dimensional arrays with elements in [0, 1].
+    Data points are 28x28 arrays with elements in [0, 1].
     '''
 
     @property
     def shape(self):
-        return (784,)
+        return (28, 28)
 
     @property
     def labels(self):

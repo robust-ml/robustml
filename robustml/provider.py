@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 import os
 import numpy as np
 import pickle
+import gzip
 import PIL.Image
 
 from . import dataset as d
@@ -28,11 +29,28 @@ class Provider(metaclass=ABCMeta):
         raise NotImplementedError
 
 class MNIST(Provider):
-    def __init__(self):
-        # XXX relies on tensorflow, remove this dependency. we don't even
-        # explicitly list tensorflow as a dependency in our setup.py.
-        from tensorflow.examples.tutorials.mnist import input_data
-        mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
+    def __init__(self, image_path, label_path):
+        '''
+        image_path is a path to the 't10k-images-idx3-ubyte.gz' from
+        'http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz'
+
+        label_path is a path to the 't10k-labels-idx1-ubyte.gz' from
+        'http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz'
+        '''
+        with gzip.open(image_path, 'rb') as f:
+            images = f.read()
+        assert images[:4] == b'\x00\x00\x08\x03'
+        images = np.frombuffer(images[16:], dtype=np.uint8)
+        assert len(images) == 7840000
+        images = images.reshape((10000, 28, 28)).astype(np.float32) / 255.0
+        with gzip.open(label_path, 'rb') as f:
+            labels = f.read()
+        assert labels[:4] == b'\x00\x00\x08\x01'
+        labels = np.frombuffer(labels[8:], dtype=np.uint8)
+        assert len(labels) == 10000
+
+        self.xs = images
+        self.ys = labels
 
     def provides(self, dataset):
         return isinstance(dataset, d.MNIST)
@@ -41,8 +59,8 @@ class MNIST(Provider):
         return 10000
 
     def __getitem__(self, index):
-        x = mnist.test.images[index]
-        y = mnist.test.labels[index]
+        x = self.xs[index]
+        y = self.ys[index]
         return x, y
 
 class CIFAR10(Provider):
