@@ -79,7 +79,7 @@ class Lp(ThreatModel):
             return False
         norm = np.linalg.norm(original - perturbed, ord=self._p)
         return norm <= self._epsilon + self._SLOP
-    
+
     @property
     def targeted(self):
         return self._targeted
@@ -112,7 +112,7 @@ class Linf(Lp):
     || x - x' ||_\infty <= \epsilon
 
     >>> model = Linf(0.1)
-    >>> x = np.array([1, 2, 3])
+    >>> x = np.array([0.1, 0.2, 0.3])
     >>> model.check(x, x)
     True
     >>> model.targeted
@@ -120,13 +120,13 @@ class Linf(Lp):
     >>> model = Linf(0.1, targeted=True)
     >>> model.targeted
     True
-    >>> y = np.array([1.1, 2.05, 3.02])
+    >>> y = np.array([0.1, 0.25, 0.32])
     >>> model.check(x, y)
     True
-    >>> z = np.array([1.2, 2, 3])
+    >>> z = np.array([0.3, 0.2, 0.3])
     >>> model.check(x, z)
     False
     '''
-    
+
     def __init__(self, epsilon, targeted=False):
         super().__init__(p=np.inf, epsilon=epsilon, targeted=targeted)
