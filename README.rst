@@ -7,7 +7,7 @@ specifying attacks and evaluating attacks against models.
 
 The motivation behind this project is to make it easy to make specific,
 testable claims about the robustness about machine learning models. Read more
-in the `FAQ <http://www.robust-ml.org/faq/>`__.
+in the `FAQ <https://www.robust-ml.org/faq/>`__.
 
 Installation
 ------------
