@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import gzip
 import PIL.Image
+import csv
 
 from . import dataset as d
 
@@ -62,6 +63,76 @@ class MNIST(Provider):
         x = self.xs[index]
         y = self.ys[index]
         return x, y
+
+class FMNIST(Provider):
+    def __init__(self, image_path, label_path):
+        '''
+        image_path is a path to the 't10k-images-idx3-ubyte.gz' from
+        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz'
+
+        label_path is a path to the 't10k-labels-idx1-ubyte.gz' from
+        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz'
+        '''
+        with gzip.open(image_path, 'rb') as f:
+            images = f.read()
+        assert images[:4] == b'\x00\x00\x08\x03'
+        images = np.frombuffer(images[16:], dtype=np.uint8)
+        assert len(images) == 7840000
+        images = images.reshape((10000, 28, 28)).astype(np.float32) / 255.0
+        with gzip.open(label_path, 'rb') as f:
+            labels = f.read()
+        assert labels[:4] == b'\x00\x00\x08\x01'
+        labels = np.frombuffer(labels[8:], dtype=np.uint8)
+        assert len(labels) == 10000
+
+        self.xs = images
+        self.ys = labels
+
+    def provides(self, dataset):
+        return isinstance(dataset, d.FMNIST)
+
+    def __len__(self):
+        return 10000
+
+    def __getitem__(self, index):
+        x = self.xs[index]
+        y = self.ys[index]
+        return x, y
+
+class GTS(Provider):
+    def __init__(self, test_data):
+        '''
+        test_data is a path to the test set of German Traffic Sign dataset (GTSRB/) from
+        `http://benchmark.ini.rub.de/Dataset/GTSRB_Final_Test_Images.zip`
+
+        Note that the labels should be obtained separately from
+        `http://benchmark.ini.rub.de/Dataset/GTSRB_Final_Test_GT.zip`
+        and placed to `test_data`
+        '''
+        height, width = 32, 32  # to resize the GTS images that originally have various sizes (from 15x15 to 250x250)
+        images, labels = [], []
+
+        f_annotation = test_data + 'GT-final_test.csv'
+        gtFile = open(f_annotation)  # annotations file
+        gtReader = csv.reader(gtFile, delimiter=';')  # csv parser for annotations
+        for row in list(gtReader)[1:]:  # loop over all images in the annotation file (ignoring the header)
+            image_file_name = row[0]
+            img = PIL.Image.open(test_data + 'Final_Test/Images/' + image_file_name)
+            img = img.resize((height, width), PIL.Image.ANTIALIAS)
+            images.append(np.array(img))
+            labels.append(int(row[7]))
+        gtFile.close()
+        self.xs = np.array(images, dtype=np.float32) / 255.0
+        self.ys = np.array(labels)
+
+    def provides(self, dataset):
+        return isinstance(dataset, d.GTS)
+
+    def __len__(self):
+        return 12630
+
+    def __getitem__(self, index):
+        return self.xs[index], self.ys[index]
 
 class CIFAR10(Provider):
     def __init__(self, test_data):

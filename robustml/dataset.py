@@ -33,6 +33,32 @@ class MNIST(Dataset):
     def labels(self):
         return 10
 
+class FMNIST(Dataset):
+    '''
+    Data points are 28x28 arrays with elements in [0, 1].
+    '''
+
+    @property
+    def shape(self):
+        return (28, 28)
+
+    @property
+    def labels(self):
+        return 10
+
+class GTS(Dataset):
+    '''
+    Data points are 32x32x3 arrays with elements in [0, 1].
+    '''
+
+    @property
+    def shape(self):
+        return (32, 32, 3)
+
+    @property
+    def labels(self):
+        return 43
+
 class CIFAR10(Dataset):
     '''
     Data points are 32x32x3 arrays with elements in [0, 1].
